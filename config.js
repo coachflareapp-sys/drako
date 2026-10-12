@@ -1,0 +1,1 @@
+export const supabaseConfig = {"anonKey":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhiaGpxZWpxYnFvdndhbXp0ZGNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NzEyMTksImV4cCI6MjEwNzM0NzIxOX0.zxk0VP9aEjnxYH4KBlGr_xeA15Zd3yGiJs-34J6j20w","url":"https://xbhjqejqbqovwamztdcn.supabase.co"};
