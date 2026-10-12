@@ -15,7 +15,8 @@
 - Nequi y Daviplata. Datos de recepción pendientes.
 - Mascotas y equipaje declarados. No hay recargos definidos.
 - Telegram para avisos del conductor. No enviar avisos de carreras a administración técnica.
-- Logo principal plateado sobre negro, slogan: El camino seguro hacia tu destino.
+- Logo principal dorado sobre negro, slogan: El camino seguro hacia tu destino. Logo AITREZ en el pie de página.
+- No mostrar nombre del conductor ni datos del vehículo en bienvenida/cotizador. Solo revelarlos al pasajero después de la confirmación del conductor, mediante el flujo autenticado o enlace privado de su reserva.
 
 ## Siguientes entregas
 
