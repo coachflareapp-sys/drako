@@ -1,6 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "drako",
+  "account_id": "f03cce8a96e348120ed2d8c5cb634408",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "drakotransport.app/*", "zone_name": "drakotransport.app" }
+  ],
   "compatibility_date": "2026-10-11",
   "assets": {
     "directory": "./dist"
