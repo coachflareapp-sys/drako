@@ -1,1 +1,1 @@
-{"name":"drako-transport","private":true,"type":"module","scripts":{"check":"node --check app.js && node --check api.js && node --check portals.js && node --check booking.js && node --check booking-details.js","build":"node scripts/build.mjs"}}
+{"name":"drako-transport","private":true,"type":"module","scripts":{"check":"node --check app.js && node --check api.js && node --check portals.js && node --check booking.js && node --check booking-details.js && node --check reservation.js","build":"node scripts/build.mjs"}}

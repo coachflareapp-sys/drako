@@ -1,6 +1,6 @@
 # DRAKO Transport
 
-Aplicación en español, optimizada para celulares y compatible con Cloudflare Pages. Ejecutar `npm run build` y publicar exclusivamente `dist/`. Los portales se autentican contra Supabase; la reserva pública sigue pendiente de integrar rutas y confirmación.
+Aplicación en español, optimizada para celulares y desplegada con Cloudflare Workers Static Assets. Ejecutar `npm run build`; publicar exclusivamente `dist/` mediante Wrangler. Portales autenticados en Supabase y flujo público de reservas de prueba operativo. Ver PRUEBAS.md para acceso y alcance.
 
 ## Estado
 
