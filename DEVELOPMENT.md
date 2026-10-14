@@ -13,7 +13,8 @@
 - Excepciones por fecha y turnos que crucen medianoche editables por conductor/admin. Cambios que afecten reservas activas rechazados hasta resolver conflictos.
 - Tarifa: 2.000 COP/km. Mínimo sin confirmar, no se inventa un valor de Uber.
 - Nequi y Daviplata. Datos de recepción pendientes.
-- Mascotas y equipaje declarados. No hay recargos definidos.
+- Pasajeros y mascotas declarados, sin recargo. Equipaje declarado con cantidad/tamaño opcionales.
+- Formulario y detalle de agenda: nombre, apellido, teléfono, recogida, llegada, paradas, pasajeros, mascotas, equipaje, fecha/hora de recogida y fecha/hora automática de creación. Método de pago después de los datos solicitados.
 - Telegram para avisos del conductor. No enviar avisos de carreras a administración técnica.
 - Logo principal dorado sobre negro, slogan: El camino seguro hacia tu destino. Logo AITREZ en el pie de página.
 - No mostrar nombre del conductor ni datos del vehículo en bienvenida/cotizador. Solo revelarlos al pasajero después de la confirmación del conductor, mediante el flujo autenticado o enlace privado de su reserva.
