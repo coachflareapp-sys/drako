@@ -9,9 +9,11 @@
 - Inicio del servicio exclusivamente por conductor asignado, con permiso GPS. Medición de distancia, cálculo acumulado y finalización en servidor.
 - Consulta privada del pasajero actualiza estado y medición. Calificación 1–5 y comentario después de finalizar; visibles al conductor/admin.
 
-## Bloqueo actual
+## Conexión verificada
 
-HeiGIT está rechazando la clave ORS_API_KEY configurada con HTTP 403. No se ha validado la búsqueda de direcciones ni una cotización real; el formulario informa el fallo y no guarda una distancia inventada. Revisar clave activa y cuotas en account.heigit.org y volver a guardarla mediante `npx --yes wrangler secret put ORS_API_KEY`.
+La clave actual de HeiGIT funciona. Se utiliza api.heigit.org/pelias/v1/search y api.heigit.org/openrouteservice/v2/directions/driving-car. La búsqueda de accesos por carretera admite un radio de 1000 metros para lugares grandes como el aeropuerto; la cotización sigue siendo aproximada y debe confirmarse el punto exacto de recogida/llegada.
+
+Verificación API y navegador: Chipichape → aeropuerto Alfonso Bonilla Aragón, 23.849 metros, 2.630 segundos, 47.698 COP. El formulario mostró 23,8 km y 44 minutos automáticamente. No se crearon reservas.
 
 Las credenciales ORS_API_KEY y SUPABASE_SERVICE_KEY se mantienen en secretos del Worker, no en la interfaz ni en Git.
 
@@ -26,4 +28,4 @@ La tarifa mínima aún no tiene un importe acordado: no se inventa un valor. Ant
 - Sintaxis de todos los módulos y compilación.
 - Navegador: selector internacional, cambio a Estados Unidos (+1 y bandera), campos manuales y avisos de prueba retirados.
 - Migración transaccional 202610130003: cotización de fixture confiable, privacidad hasta confirmación, teléfono internacional, inicio del conductor, cálculo GPS con posiciones sintéticas, finalización y calificación; todos los registros se revirtieron al terminar.
-- Búsqueda real HeiGIT: HTTP 403; pendiente de corregir credencial/cuota.
+- Búsqueda y cotización real HeiGIT: verificadas en API y navegador tras guardar la clave correcta.
