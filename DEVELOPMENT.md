@@ -15,6 +15,7 @@
 - Nequi y Daviplata. Datos de recepción pendientes.
 - Pasajeros y mascotas declarados, sin recargo. Equipaje declarado con cantidad/tamaño opcionales.
 - Formulario y detalle de agenda: nombre, apellido, teléfono, recogida, llegada, paradas, pasajeros, mascotas, equipaje, fecha/hora de recogida y fecha/hora automática de creación. Método de pago después de los datos solicitados.
+- Selector internacional de teléfono con Colombia predeterminado. El flujo actual sustituye pruebas manuales por cotizaciones en servidor y añade medición GPS/calificación. Ver RUTAS_Y_TAXIMETRO.md para el bloqueo HTTP 403 de HeiGIT y los límites de verificación.
 - Telegram para avisos del conductor. No enviar avisos de carreras a administración técnica.
 - Logo principal dorado sobre negro, slogan: El camino seguro hacia tu destino. Logo AITREZ en el pie de página.
 - No mostrar nombre del conductor ni datos del vehículo en bienvenida/cotizador. Solo revelarlos al pasajero después de la confirmación del conductor, mediante el flujo autenticado o enlace privado de su reserva.

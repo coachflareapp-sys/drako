@@ -1,6 +1,6 @@
 # DRAKO Transport
 
-Aplicación en español, optimizada para celulares y desplegada con Cloudflare Workers Static Assets. Ejecutar `npm run build`; publicar exclusivamente `dist/` mediante Wrangler. Portales autenticados en Supabase y flujo público de reservas de prueba operativo. Ver PRUEBAS.md para acceso y alcance.
+Aplicación en español, optimizada para celulares y desplegada con Cloudflare Workers y Static Assets. Ejecutar `npm run build` y desplegar con Wrangler. Portales autenticados en Supabase y cotización de rutas en servidor. Ver RUTAS_Y_TAXIMETRO.md para el estado actual: el proveedor está rechazando la clave configurada con HTTP 403; la cotización real permanece bloqueada.
 
 ## Estado
 

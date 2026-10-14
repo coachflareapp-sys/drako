@@ -1,1 +1,13 @@
-{"name":"drako-transport","private":true,"type":"module","scripts":{"check":"node --check app.js && node --check api.js && node --check portals.js && node --check booking.js && node --check booking-details.js && node --check reservation.js","build":"node scripts/build.mjs"}}
+{
+    "name":  "drako-transport",
+    "private":  true,
+    "type":  "module",
+    "scripts":  {
+                    "check":  "node --check app.js \u0026\u0026 node --check api.js \u0026\u0026 node --check portals.js \u0026\u0026 node --check booking.js \u0026\u0026 node --check booking-details.js \u0026\u0026 node --check reservation.js \u0026\u0026 node --check schedule-editor.js \u0026\u0026 node --check phone.js \u0026\u0026 node --check route-quote.js \u0026\u0026 node --check meter.js \u0026\u0026 node --check worker.js",
+                    "build":  "node scripts/build.mjs"
+                },
+    "devDependencies":  {
+                            "flag-icons":  "^7.5.0",
+                            "libphonenumber-js":  "^1.13.15"
+                        }
+}
