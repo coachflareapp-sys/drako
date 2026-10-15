@@ -6,3 +6,5 @@ node_modules/
 supabase/.temp/
 dist/
 .private/
+/catalogue/cali/[0-9]*.json
+/catalogue/cali/streets/**/*%*.json

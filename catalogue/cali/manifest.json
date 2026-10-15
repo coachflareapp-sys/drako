@@ -1,0 +1,50 @@
+{
+  "source": "https://ws-idesc.cali.gov.co/geoserver/dapm/ows",
+  "layer": "dapm:pdt_nmc_nomenclatura_domiciliaria",
+  "license": "CC BY (catalogue metadata)",
+  "imported_at": "2026-10-15T02:33:49.042Z",
+  "source_count": 692389,
+  "unique_searchable": 638636,
+  "invalid": 0,
+  "unsupported": 29942,
+  "states": {
+    "Certificada": 432313,
+    "Por Certificar": 205521,
+    "Lote": 793,
+    "Provisional": 9
+  },
+  "bytes": 72552395,
+  "street_files": 2531,
+  "sha256": "243b6c6146f2bd07e536119a2d3b364646a9bb0c9b49d4d138cbaa20f9d6a2b4",
+  "roads": 11304,
+  "intersection_pairs": 1677,
+  "source_cutoffs": [
+    "2026-09-03Z"
+  ],
+  "carlos_candidates": [
+    [
+      "AV 14 OESTE 8 OESTE 18",
+      "AV 14 OESTE # 8 OESTE - 18 (Dirección Catastral)",
+      "Aguacatal",
+      "Por Certificar",
+      -76.5510361,
+      3.45827658
+    ],
+    [
+      "AV 14 OESTE 8 OESTE 18",
+      "AV 14 OESTE # 8 OESTE - 18 (Dirección Catastral)",
+      "Aguacatal",
+      "Por Certificar",
+      -76.55089837,
+      3.45827317
+    ]
+  ],
+  "cl5_kr39": [
+    [
+      "KR 39 con CL 5",
+      "San Fernando Nuevo",
+      -76.5462561,
+      3.42465042
+    ]
+  ]
+}
