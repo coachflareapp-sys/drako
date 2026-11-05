@@ -6,7 +6,7 @@ import QRCode from 'qrcode';
 import {writeFile,access} from 'node:fs/promises';
 const target=resolve('dist');
 await mkdir(target,{recursive:true});
-const files=['index.html','privacidad.html','style.css','app.js','api.js','portals.js','management.js','booking.js','booking-details.js','reservation.js','schedule-editor.js','phone.js','route-quote.js','location-picker.js','meter.js','config.js','_headers'];
+const files=['index.html','privacidad.html','style.css','app.js','api.js','portals.js','management.js','telegram-panel.js','booking.js','booking-details.js','reservation.js','schedule-editor.js','phone.js','route-quote.js','location-picker.js','meter.js','config.js','_headers'];
 for(const file of files)await copyFile(file,resolve(target,file));
 await cp('assets',resolve(target,'assets'),{recursive:true});
 await QRCode.toFile(resolve(target,'assets/drako-qr.png'),'https://drakotransport.app/',{width:800,margin:4,errorCorrectionLevel:'M'});

@@ -2,6 +2,8 @@
 
 Fecha: 4 de noviembre de 2026. No requiere un nuevo documento del cliente.
 
+Actualización posterior por decisión del usuario: se sustituyó WhatsApp automático por avisos gratuitos de Telegram para el conductor y confirmación web para el pasajero. Ver TELEGRAM.md para el estado vigente. Las instrucciones de Meta de este informe quedan como referencia de la opción descartada.
+
 ## Incidencias encontradas y corregidas
 
 - Supabase estaba `INACTIVE`: se solicitó su restauración con el acceso existente, sin contratar un plan, y volvió a `ACTIVE_HEALTHY`. Mientras estuvo pausado, autenticación, cotización y reservas no podían completarse aunque la página abriera.

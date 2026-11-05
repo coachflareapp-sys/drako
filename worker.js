@@ -1,5 +1,5 @@
 import {parseAddress,bucketFor,addressMatches,normalizeAddress} from './address-search.js';
-import {dispatchNotifications,dispatchForBooking,isAdministrator,whatsappStatus,checkReservationService} from './notification-worker.js';
+import {dispatchNotifications,dispatchForBooking,isAdministrator,whatsappStatus,checkReservationService,telegramStatus,telegramUserStatus,setupTelegram,handleTelegramWebhook} from './notification-worker.js';
 const BASE='https://xbhjqejqbqovwamztdcn.supabase.co';
 const catalogueCache=new Map();
 async function catalogue(env,url,file){if(catalogueCache.has(file))return catalogueCache.get(file);const response=await env.ASSETS.fetch(new URL('/catalogue/cali/'+file,url));if(!response.ok)return null;const data=await response.json();if(catalogueCache.size>12)catalogueCache.clear();catalogueCache.set(file,data);return data;}
@@ -18,10 +18,13 @@ const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control
 async function sign(value,secret){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(JSON.stringify(value)))),v=>v.toString(16).padStart(2,'0')).join('')}
 async function db(env,path,body){const response=await fetch(BASE+'/rest/v1/'+path,{method:'POST',headers:{apikey:env.SUPABASE_SERVICE_KEY,Authorization:'Bearer '+env.SUPABASE_SERVICE_KEY,'Content-Type':'application/json',Prefer:'return=representation'},body:JSON.stringify(body)});if(!response.ok)throw new Error('No fue posible guardar la cotización.');return response.json()}
 export default {async fetch(request,env){const url=new URL(request.url);if(!url.pathname.startsWith('/api/'))return env.ASSETS.fetch(request);
- if(!env.ORS_API_KEY||!env.SUPABASE_SERVICE_KEY)return json({message:'La cotización automática todavía está conectándose. Intenta nuevamente en unos minutos.'},503);
+ if(!env.SUPABASE_SERVICE_KEY)return json({message:'El servicio todavía está conectándose. Intenta nuevamente en unos minutos.'},503);
  try{
- if(url.pathname==='/api/integrations'&&request.method==='GET'){if(!await isAdministrator(request,env))return json({message:'Acceso restringido.'},403);return json({whatsapp:whatsappStatus(env),routes:Boolean(env.ORS_API_KEY)});}
- if(url.pathname==='/api/notifications/dispatch'&&request.method==='POST'){if(!whatsappStatus(env).configured)return json({configured:false,sent:0});return json(await dispatchForBooking(request,env));}
+ if(url.pathname==='/api/telegram/webhook'&&request.method==='POST')return handleTelegramWebhook(request,env);
+ if(url.pathname==='/api/telegram/status'&&request.method==='GET'){try{const status=await telegramUserStatus(request,env);return status?json(status):json({message:'Acceso restringido.'},403);}catch(error){return json({message:error.message},502);}}
+ if(url.pathname==='/api/telegram/setup'&&request.method==='POST'){if(!await isAdministrator(request,env))return json({message:'Acceso restringido.'},403);try{return json(await setupTelegram(env));}catch(error){return json({message:error.message},400);}}
+ if(url.pathname==='/api/integrations'&&request.method==='GET'){if(!await isAdministrator(request,env))return json({message:'Acceso restringido.'},403);return json({whatsapp:whatsappStatus(env),telegram:await telegramStatus(env),routes:Boolean(env.ORS_API_KEY)});}
+ if(url.pathname==='/api/notifications/dispatch'&&request.method==='POST'){if(!env.TELEGRAM_BOT_TOKEN)return json({configured:false,channel:'telegram',sent:0});return json(await dispatchForBooking(request,env));}
  if(url.pathname==='/api/location'&&request.method==='POST'){
  if(Number(request.headers.get('content-length')||0)>2000)return json({message:'Solicitud demasiado grande.'},413);
  const {lat,lon,label}=await request.json();if(typeof lat!=='number'||typeof lon!=='number'||!Number.isFinite(lat)||!Number.isFinite(lon)||lat<3||lat>4.1||lon< -76.9||lon> -75.9||typeof label!=='string'||label.trim().length<3||label.length>300)return json({message:'Indica una dirección y un punto en Cali o sus alrededores.'},400);
@@ -30,12 +33,14 @@ export default {async fetch(request,env){const url=new URL(request.url);if(!url.
  const query=url.searchParams.get('q')?.trim();if(!query||query.length<4||query.length>200)return json({places:[]});
  const official=await officialPlaces(query,env,url);if(official.length){const parsed=parseAddress(query);return json({places:await Promise.all(official.map(p=>signedPlace(p,query,env))),auto_select:official.length===1&&(parsed?.kind==='intersection'||parsed?.rest.length>=2),attribution:'Direcciones: Alcaldía de Cali · CC BY'});}
  const parsed=parseAddress(query);if(parsed?.kind==='intersection')return json({places:[],message:'No encontramos ese cruce con suficiente precisión. Puedes usar tu ubicación o marcarlo en el mapa.'});
+ if(!env.ORS_API_KEY)return json({places:[],message:'El buscador complementario no está conectado.'});
  const provider=new URL('https://api.heigit.org/pelias/v1/search');provider.search=new URLSearchParams({api_key:env.ORS_API_KEY.trim(),text:query,'boundary.country':'COL','boundary.rect.min_lon':'-76.9','boundary.rect.max_lon':'-75.9','boundary.rect.min_lat':'3.0','boundary.rect.max_lat':'4.1','focus.point.lon':'-76.53','focus.point.lat':'3.45',size:'5'});
  const response=await fetch(provider,{headers:{Authorization:env.ORS_API_KEY.trim()},signal:AbortSignal.timeout(12000)});if(!response.ok)return json({message:'El servicio de direcciones no respondió. Intenta nuevamente.',provider_status:response.status},502);const data=await response.json();const places=[];
  for(const feature of data.features||[]){const [lon,lat]=feature.geometry?.coordinates||[];if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;const properties=feature.properties||{};if(!['address','venue'].includes(properties.layer))continue;
  if(parsed?.rest.length>=2){const candidate=parseAddress(properties.label);if(!candidate||!addressMatches(parsed,[normalizeAddress(properties.label)]))continue;}
  places.push(await signedPlace({label:properties.label,lon,lat,source:'OpenRouteService · OpenStreetMap',quality:'search'},query,env));}return json({places})}
  if(url.pathname==='/api/quote'&&request.method==='POST'){
+ if(!env.ORS_API_KEY)return json({message:'El servicio de rutas no está conectado.'},503);
  if(Number(request.headers.get('content-length')||0)>12000)return json({message:'Solicitud demasiado grande.'},413);
  const {places}=await request.json();if(!Array.isArray(places)||places.length<2||places.length>10)return json({message:'Selecciona recogida, llegada y las paradas en las sugerencias.'},400);
  for(const p of places){const value=signedValue(p);if(!Number.isFinite(p.expires)||p.expires<Date.now()||!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||p.signature!==await sign(value,env.SUPABASE_SERVICE_KEY))return json({message:'Selecciona nuevamente las direcciones para actualizar la cotización.'},400)}

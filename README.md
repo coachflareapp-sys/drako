@@ -1,6 +1,6 @@
 # DRAKO Transport
 
-Estado revisado el 4 de noviembre de 2026: ver [ESTADO_REQUERIMIENTOS_CARLOS.md](ESTADO_REQUERIMIENTOS_CARLOS.md) para el alcance comprobado, las correcciones y las conexiones pendientes. Incluye búsqueda oficial con selección automática inequívoca, efectivo, reprogramación, bloqueos, tarifas, reportes, QR y textos editables. WhatsApp tiene cola y reintentos preparados, pero no está activado sin la cuenta y credenciales Business. El apartado histórico de próximos pasos que aparece abajo no sustituye ese informe actualizado.
+Estado revisado el 4 de noviembre de 2026: ver [ESTADO_REQUERIMIENTOS_CARLOS.md](ESTADO_REQUERIMIENTOS_CARLOS.md) para el alcance comprobado, las correcciones y las conexiones pendientes. Incluye búsqueda oficial con selección automática inequívoca, efectivo, reprogramación, bloqueos, tarifas, reportes, QR y textos editables. Por decisión del usuario se utiliza Telegram para avisos al conductor y confirmación web para el pasajero; ver TELEGRAM.md para guardar la clave del bot y vincular el teléfono. WhatsApp automático está desactivado. El apartado histórico de próximos pasos que aparece abajo no sustituye ese informe actualizado.
 
 Aplicación en español, optimizada para celulares y desplegada con Cloudflare Workers y Static Assets. Ejecutar `npm run build` y desplegar con Wrangler. Portales autenticados en Supabase y cotización de rutas en servidor. Cotización automática verificada en API y navegador. Ver RUTAS_Y_TAXIMETRO.md para alcance y límites del medidor GPS.
 

@@ -1,0 +1,37 @@
+begin;
+savepoint telegram_fixtures;
+do $$
+declare dr record; code text; expired_code text; token text:=replace(gen_random_uuid()::text||gen_random_uuid()::text,'-',''); quote uuid:=gen_random_uuid(); request uuid:=gen_random_uuid(); tariff uuid; rate integer; pickup timestamptz; candidate timestamptz; response jsonb; b bookings; n integer; rejected boolean; claimed integer;
+begin
+ select d.id,d.vehicle_id into dr from drivers d join vehicles v on v.id=d.vehicle_id where d.active and v.active order by d.id limit 1;
+ if dr.id is null then raise exception 'No configured fixture driver';end if;
+ if has_function_privilege('anon','link_telegram_chat(text,bigint)','EXECUTE') or has_function_privilege('authenticated','claim_telegram_notifications()','EXECUTE') then raise exception 'Telegram server operations exposed';end if;
+ perform set_config('request.jwt.claim.sub','',true);rejected:=false;
+ begin perform create_telegram_link(dr.id);exception when raise_exception then rejected:=true;end;if not rejected then raise exception 'Anonymous Telegram pairing accepted';end if;
+ perform set_config('request.jwt.claim.sub',dr.id::text,true);
+ expired_code:=create_telegram_link(dr.id);update telegram_link_codes set expires_at=now()-interval '1 second' where driver_id=dr.id;
+ if link_telegram_chat(expired_code,5550001) then raise exception 'Expired link accepted';end if;
+ code:=create_telegram_link(dr.id);
+ if exists(select 1 from telegram_link_codes where code_hash=code) or not exists(select 1 from telegram_link_codes where code_hash=encode(sha256(convert_to(code,'UTF8')),'hex')) then raise exception 'Pairing code not stored as hash';end if;
+ if not link_telegram_chat(code,5550001) or not link_telegram_chat(code,5550001) then raise exception 'Pairing/idempotency failed';end if;
+ if link_telegram_chat(code,5550002) then raise exception 'Used code accepted for a different chat';end if;
+ if not exists(select 1 from jsonb_array_elements(telegram_connection_status()) item where item->>'id'=dr.id::text and (item->>'linked')::boolean) then raise exception 'Pairing status lost';end if;
+ for n in 1..5760 loop candidate:=date_trunc('hour',now())+make_interval(mins=>n*15);if test_slot_available(dr.id,dr.vehicle_id,candidate,30) then pickup:=candidate;exit;end if;end loop;
+ if pickup is null then raise exception 'No fixture time';end if;
+ select id,per_km_cop into tariff,rate from tariff_versions order by effective_from desc limit 1;
+ insert into route_quotes values(quote,'[{"label":"Recogida verificación","original":"Recogida original","lon":-76.5510361,"lat":3.45827658},{"label":"Llegada verificación","original":"Llegada original","lon":-76.5462561,"lat":3.42465042}]',6000,1800,rate*6,tariff,now()+interval '15 minutes');
+ response:=submit_quoted_booking(request,token,quote,jsonb_build_object('first_name','Prueba transaccional','phone','+573001234567','passengers',2,'pets',true,'luggage',true,'luggage_counts',jsonb_build_object('small',2,'medium',0,'large',1),'pickup_at',pickup,'consent',true,'whatsapp_consent',true,'payment_method','efectivo'));
+ if response->>'ok'<>'true' then raise exception 'Fixture reservation failed';end if;
+ select * into b from bookings where request_id=request;
+ if exists(select 1 from notification_outbox where booking_id=b.id and channel='whatsapp') then raise exception 'Paid channel queued';end if;
+ if (select count(*) from notification_outbox where booking_id=b.id and channel='telegram')<>1 then raise exception 'Driver notice missing or duplicated';end if;
+ if not exists(select 1 from notification_outbox where booking_id=b.id and payload->>'driver_id'=dr.id::text and payload->>'phone'='+573001234567' and payload->>'luggage_details'='2 pequeñas, 1 grandes') then raise exception 'Booking details missing from notification';end if;
+ update notification_outbox set next_attempt_at='2000-01-01' where booking_id=b.id;
+ select count(*) into claimed from claim_telegram_notifications() where booking_id=b.id and payload->>'chat_id'='5550001';if claimed<>1 then raise exception 'Linked driver message not claimed';end if;
+ perform disconnect_telegram(dr.id);update notification_outbox set attempts=0,next_attempt_at='2000-01-01' where booking_id=b.id;
+ select count(*) into claimed from claim_telegram_notifications() where booking_id=b.id;if claimed<>0 then raise exception 'Disconnected chat still claimed';end if;
+ perform set_config('request.jwt.claim.sub','',true);
+end $$;
+rollback to savepoint telegram_fixtures;
+release savepoint telegram_fixtures;
+commit;
