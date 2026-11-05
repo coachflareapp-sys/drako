@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PNG} from 'pngjs';
+import jsQR from 'jsqr';
+const bytes=process.argv.includes('--live')?Buffer.from(await (await fetch('https://drakotransport.app/assets/drako-qr.png')).arrayBuffer()):await readFile('dist/assets/drako-qr.png');
+const image=PNG.sync.read(bytes);
+const decoded=jsQR(new Uint8ClampedArray(image.data.buffer,image.data.byteOffset,image.data.byteLength),image.width,image.height);
+assert.ok(decoded,'The QR image cannot be decoded');
+assert.equal(decoded.data,'https://drakotransport.app/');
+console.log('PASS: QR independently decoded to '+decoded.data+' ('+image.width+'×'+image.height+').');
