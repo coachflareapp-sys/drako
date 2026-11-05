@@ -8,6 +8,7 @@
     { "pattern": "drakotransport.app/*", "zone_name": "drakotransport.app" }
   ],
   "compatibility_date": "2026-10-11",
+  "triggers": { "crons": ["* * * * *"] },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

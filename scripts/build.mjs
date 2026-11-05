@@ -2,12 +2,14 @@ import {mkdir,copyFile,cp,readFile,readdir,unlink} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {getCountries,getCountryCallingCode} from 'libphonenumber-js';
 import metadata from 'libphonenumber-js/metadata.min.json';
+import QRCode from 'qrcode';
 import {writeFile,access} from 'node:fs/promises';
 const target=resolve('dist');
 await mkdir(target,{recursive:true});
-const files=['index.html','privacidad.html','style.css','app.js','api.js','portals.js','booking.js','booking-details.js','reservation.js','schedule-editor.js','phone.js','route-quote.js','location-picker.js','meter.js','config.js','_headers'];
+const files=['index.html','privacidad.html','style.css','app.js','api.js','portals.js','management.js','booking.js','booking-details.js','reservation.js','schedule-editor.js','phone.js','route-quote.js','location-picker.js','meter.js','config.js','_headers'];
 for(const file of files)await copyFile(file,resolve(target,file));
 await cp('assets',resolve(target,'assets'),{recursive:true});
+await QRCode.toFile(resolve(target,'assets/drako-qr.png'),'https://drakotransport.app/',{width:800,margin:4,errorCorrectionLevel:'M'});
 // Copy only the current catalogue naming scheme, excluding obsolete generated files.
 for(const bucket of await readdir('catalogue/cali/streets')){await mkdir(resolve(target,'catalogue/cali/streets',bucket),{recursive:true});for(const file of await readdir('catalogue/cali/streets/'+bucket)){if(!file.includes('%'))await copyFile('catalogue/cali/streets/'+bucket+'/'+file,resolve(target,'catalogue/cali/streets',bucket,file));}}
 for(let i=0;i<256;i++)await unlink(resolve(target,'catalogue/cali',i+'.json')).catch(error=>{if(error.code!=='ENOENT')throw error;});
