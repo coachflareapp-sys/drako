@@ -20,7 +20,7 @@ export function setupQuote(){
  const text=input.value.trim();clearTimeout(timer);if(item.place)return Promise.resolve();if(text.length<4)return Promise.resolve();if(pending&&lastQuery===text)return pending;lastQuery=text;const own=++sequence;
  pending=(async()=>{try{const response=await fetch('/api/places?q='+encodeURIComponent(text));const data=await response.json();if(own!==sequence||!input.isConnected)return;if(!response.ok)throw new Error(data.message);list.replaceChildren();if(data.auto_select&&data.places.length===1){select(data.places[0]);return;}
  for(const place of data.places){const button=document.createElement('button');button.type='button';button.textContent=place.label;button.onclick=()=>select(place);list.append(button);}
- const note=document.createElement('p');note.className='field-help';note.textContent=data.places.length?'Toca la dirección que corresponde a tu viaje.':data.message||'No encontramos el número exacto. Revisa la dirección y selecciona una coincidencia; el mapa es una ayuda opcional.';list.append(note);
+ const note=document.createElement('p');note.className='field-help';note.textContent=data.message||(data.places.length?'Toca la dirección que corresponde a tu viaje.':'No encontramos el número exacto. Revisa la dirección y selecciona una coincidencia; el mapa es una ayuda opcional.');list.append(note);
  }catch(error){if(own===sequence)status.textContent=error.message;}finally{if(lastQuery===text)pending=null;}})();return pending;
  };
  addLocationPicker(input,select,()=>item.place);

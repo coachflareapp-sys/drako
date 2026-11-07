@@ -1,15 +1,24 @@
 // Nomenclature tokens stay separate: 14, 14 A and 14 OESTE are different roads.
+function addressText(text){
+ const value=String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ const parts=value.split(',');
+ const road=/^(?:CALLE|CLL|CL|CARRERA|CRA|CR|KRA|KR|AVENIDA|AVDA|AV|DIAGONAL|DG|TRANSVERSAL|TV|C|K)\.?\s*\d/;
+ const part=parts.find(p=>road.test(p.trim()))||parts[0];
+ return part.trim().replace(/\([^)]*\)/g,' ').replace(/\b(?:APARTAMENTO|APARTAMENTOS|APTO|APT|AP|TORRE|INTERIOR|INT|PISO|OFICINA|OF|LOCAL|CASA|BLOQUE|BARRIO|URBANIZACION|CONJUNTO|EDIFICIO|PORTERIA|BODEGA|FRENTE|CERCA|AL LADO)\b.*$/,'').replace(/\bN\s*[°º]\s*/g,'#').replace(/\b(?:NUMERO|NRO|NUM|NO)\.?\s*(?=\d)/g,'#');
+}
+export const addressLabel=text=>addressText(text).trim().replace(/\s+/g,' ');
 export function normalizeAddress(text){
- return String(text||'').split(',')[0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()
+ return addressText(text)
  .replace(/([A-Z])(?=\d)/g,'$1 ')
  .replace(/\([^)]*\)/g,' ').replace(/\b(?:SANTIAGO DE CALI|CALI|COLOMBIA|VALLE DEL CAUCA)\b/g,' ')
  .replace(/\b(?:CARRERA|CRA|CR|KRA)\b/g,'KR').replace(/\b(?:CALLE|CLL)\b/g,'CL')
- .replace(/\bAVENIDA\b/g,'AV').replace(/\bDIAGONAL\b/g,'DG').replace(/\bTRANSVERSAL\b/g,'TV')
- .replace(/(\d)([A-Z])/g,'$1 $2').replace(/[^A-Z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+ .replace(/^K\b/,'KR').replace(/^C\b/,'CL')
+ .replace(/\b(?:AVENIDA|AVDA)\b/g,'AV').replace(/\bDIAGONAL\b/g,'DG').replace(/\bTRANSVERSAL\b/g,'TV')
+ .replace(/(\d)([A-Z])/g,'$1 $2').replace(/[^A-Z0-9]+/g,' ').trim().replace(/\s+/g,' ').replace(/\b0+(?=\d)/g,'');
 }
 export function parseAddress(text){
- const original=String(text||'').split(',')[0].replace(/[,\s]+esquina\s*$/i,'');const crossing=original.split(/\s+(?:con|esquina(?:\s+con)?|y)\s+/i);
- if(crossing.length===2){const a=parseAddress(crossing[0]),b=parseAddress(crossing[1]);if(a&&b)return {kind:'intersection',road:a.road,otherRoad:b.road,key:[a.road,b.road].sort().join('|')};}
+ const original=addressText(text).replace(/[,\s]+ESQUINA\s*$/,'');const crossing=original.split(/\s+(?:CON|ESQUINA(?:\s+CON)?|Y)\s+/);
+ if(crossing.length===2){const a=parseAddress(crossing[0]);let b=parseAddress(crossing[1]),inferred=false;if(a&&!b&&/^\d+[A-Z\s]*$/.test(crossing[1])&&['CL','KR'].includes(a.road.split(' ')[0])){b=parseAddress((a.road.startsWith('CL ')?'KR ':'CL ')+crossing[1]);inferred=true;}if(a&&b&&!a.rest?.length&&!b.rest?.length)return {kind:'intersection',road:a.road,otherRoad:b.road,key:[a.road,b.road].sort().join('|'),inferred};if(/\b(?:CON|ESQUINA)\b/.test(original))return null;}
  const tokens=normalizeAddress(original).split(' ');if(!['CL','KR','AV','DG','TV'].includes(tokens[0])||!/^\d+$/.test(tokens[1]||''))return null;
  let end=2;while(end<tokens.length&&(/^[A-Z]$/.test(tokens[end])||['BIS','OESTE','NORTE','SUR','ESTE'].includes(tokens[end])))end++;
  return {kind:'address',road:tokens.slice(0,end).join(' '),rest:tokens.slice(end),normalized:tokens.join(' ')};
@@ -20,5 +29,6 @@ export function addressMatches(query,row){
  // A fully entered plate must agree with all components. Missing sector is only
  // a candidate variant; an explicitly supplied letter/sector cannot disappear.
  const supplied=query.rest;if(!supplied.length)return true;
- let index=0;for(const token of parsed.rest){if(token===supplied[index])index++;else if(!['OESTE','NORTE','SUR','ESTE'].includes(token))return false;if(index===supplied.length)return true;}return false;
+ if(supplied.length===1)return parsed.rest[0]===supplied[0];
+ let index=0;for(const token of parsed.rest){if(token===supplied[index])index++;else if(!['OESTE','NORTE','SUR','ESTE'].includes(token))return false;}return index===supplied.length;
 }

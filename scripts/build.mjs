@@ -10,6 +10,9 @@ const files=['index.html','privacidad.html','style.css','app.js','api.js','porta
 for(const file of files)await copyFile(file,resolve(target,file));
 await cp('assets',resolve(target,'assets'),{recursive:true});
 await QRCode.toFile(resolve(target,'assets/drako-qr.png'),'https://drakotransport.app/',{width:800,margin:4,errorCorrectionLevel:'M'});
+// Remove stale generated street files from previous catalogue versions.
+const currentStreets=new Set();for(const bucket of await readdir('catalogue/cali/streets'))for(const file of await readdir('catalogue/cali/streets/'+bucket))currentStreets.add(bucket+'/'+file);
+try{for(const bucket of await readdir(resolve(target,'catalogue/cali/streets')))for(const file of await readdir(resolve(target,'catalogue/cali/streets',bucket))){if(/^[A-Z0-9_]+\.json$/.test(file)&&!currentStreets.has(bucket+'/'+file))await unlink(resolve(target,'catalogue/cali/streets',bucket,file));}}catch(error){if(error.code!=='ENOENT')throw error;}
 // Copy only the current catalogue naming scheme, excluding obsolete generated files.
 for(const bucket of await readdir('catalogue/cali/streets')){await mkdir(resolve(target,'catalogue/cali/streets',bucket),{recursive:true});for(const file of await readdir('catalogue/cali/streets/'+bucket)){if(!file.includes('%'))await copyFile('catalogue/cali/streets/'+bucket+'/'+file,resolve(target,'catalogue/cali/streets',bucket,file));}}
 for(let i=0;i<256;i++)await unlink(resolve(target,'catalogue/cali',i+'.json')).catch(error=>{if(error.code!=='ENOENT')throw error;});

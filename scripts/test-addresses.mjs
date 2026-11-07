@@ -15,10 +15,15 @@ globalThis.fetch=async(url,options)=>{
 };
 const env={ORS_API_KEY:'test',SUPABASE_SERVICE_KEY:'test-secret',ASSETS:{async fetch(url){try{return new Response(await readFile('dist'+decodeURIComponent(new URL(url).pathname)))}catch{return new Response('Missing',{status:404})}}}};
 async function places(q){const response=await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent(q)),env);assert.equal(response.status,200);return (await response.json()).places;}
-for(const text of ['avenida 14 oeste #8-18','Av. 14 Oeste 8 18','AV 14 OESTE # 8 OESTE - 18','Avenida 14 Oeste #8-18, Aguacatal, Cali','Av14Oeste #8-18, Cali']){
+for(const text of ['avenida 14 oeste #8-18','Av. 14 Oeste 8 18','AV 14 OESTE # 8 OESTE - 18','Avenida 14 Oeste #8-18, Aguacatal, Cali','Av14Oeste #8-18, Cali','Avda 14 Oeste #8-18','Cali, Avenida 14 Oeste #8-18','Cali, Avda 14 Oeste numero 8-18 apto 201','Avenida 14 Oeste #8-18 torre 2 interior 3','Avenida 14 Oeste #08-018']){
  const result=await places(text);assert.ok(result.length>0,text);assert.ok(result.every(p=>p.label.includes('Aguacatal')&&!p.label.includes('14 A')));assert.ok(result.every(p=>p.original===text));
 }
 const corners=await places('calle 5 con cra 39 esquina');assert.equal(corners.length,1);assert.equal(corners[0].quality,'intersection');assert.ok(!corners[0].label.includes('39-71'));
+const inferredResponse=await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Calle 5 y 39')),env);const inferred=await inferredResponse.json();assert.equal(inferred.places.length,1);assert.equal(inferred.auto_select,false);assert.ok(inferred.message.includes('Confirma'));
+assert.equal(parseAddress('Cl 72Y #27G-05').road,'CL 72 Y');
+assert.equal(parseAddress('K 39 #5-20').road,'KR 39');assert.equal(parseAddress('C 5 #39-20').road,'CL 5');
+assert.equal(addressMatches(parseAddress('CL 5 39 71'),['CL 5 39 71 2']),false);
+assert.equal(addressMatches(parseAddress('AV 14 OESTE 8 18 APTO 201'),['AV 14 OESTE 8 OESTE 18']),true);
 for(const q of ['Cali','Avenida 9999 #9999-9999','Calle 5 con Carrera 9999','Calle 5 #39-71, Jamundí'])assert.equal((await places(q)).length,0,q);
 assert.equal(addressMatches(parseAddress('AV 14 OESTE 8 18'),['AV 14 A OESTE 8 OESTE 18']),false);
 assert.equal(addressMatches(parseAddress('CL 5 39 71'),['CL 5 39 173']),false);

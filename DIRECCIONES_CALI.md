@@ -1,5 +1,31 @@
 # Buscador oficial de Cali: implementación
 
+## Actualización del 7 de noviembre de 2026
+
+Se regeneró la búsqueda local con las páginas WFS ya descargadas; su corte declarado sigue siendo 2026-09-03. No es una nueva actualización de campo de la Alcaldía.
+
+- Se interpretan 689.304 de los 692.389 registros de origen. Quedan 3.085 formatos apartados frente a 29.942 antes: 26.857 registros adicionales interpretables, no necesariamente viviendas distintas.
+- Apartamento, torre, interior, local y referencias se separan para buscar el inmueble. Se conserva la entrada original completa para el conductor. La coincidencia no muestra el apartamento de otro registro del edificio.
+- Se reconocen Avda, C/K al comienzo, número/nro/No./N°, ceros iniciales y ciudad antes de la dirección. Letras y sectores explícitos siguen siendo significativos.
+- El barrio indicado se usa para desambiguar cuando coincide con barrios de los resultados. Una placa completa no acepta números adicionales como si fueran la misma dirección.
+- “Calle 5 y 39” propone el cruce oficial con confirmación explícita; una interpretación inferida no se selecciona automáticamente.
+- Resultado: 511.109 entradas deduplicadas, 3.635 archivos de vía, unos 56,4 MB. La cifra baja al agrupar variantes y unidades con dirección base y coordenadas idénticas; no mide cobertura ni significa esa cantidad de viviendas perdidas.
+- Importación y build retiran archivos JSON de vías obsoletas de sus directorios generados para no mezclar versiones.
+
+### Pruebas
+
+Pasaron check, build y la suite existente. `node scripts/verify-address-variants.mjs --live` comprobó 17 variantes de los dos ejemplos del usuario y 25 registros C/K recuperados, contrastando coordenadas con la fuente. Requiere `.private/cali` para la parte de recuperación. Es una prueba de formatos, no una estimación del acierto sobre direcciones independientes de clientes.
+
+En el formulario publicado, `Cali, Avda 14 Oeste numero 8-18 apto 201` → `Calle 5 con Carrera 39` calculó 6,62 km y 13.244 COP aproximados sin abrir mapa. Se conservó el texto del apartamento y no se envió ninguna reserva.
+
+### Servicio municipal investigado
+
+La [página oficial del geocodificador](https://www.cali.gov.co/planeacion/publicaciones/186748/geocodificador-idesc/) enlaza `https://geocodificador.ia.cali.gov.co/`. Su frontend público envía `direccion` y `captchaToken` a `/geoapi/proceso/geocodificador_individual`. No se automatizó ese servicio ni se eludió su CAPTCHA. Una integración de servidor requiere una modalidad autorizada documentada; DRAKO sigue usando la copia local sin nuevos proveedores de pago.
+
+No se añadieron coordenadas por interpolación ni comercios sin fuente. No se garantiza encontrar todas las direcciones: los casos sin resolución suficiente mantienen mapa/GPS como ayudas.
+
+## Histórico de la implementación anterior
+
 Implementado el 14 de octubre de 2026 (hora del usuario).
 
 ## Catálogo descargado
