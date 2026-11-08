@@ -1,6 +1,6 @@
 // Nomenclature tokens stay separate: 14, 14 A and 14 OESTE are different roads.
 function addressText(text){
- const value=String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+ const value=String(text||'').replace(/(\d)ª/g,'$1A').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
  const parts=value.split(',');
  const road=/^(?:CALLE|CLL|CL|CARRERA|CRA|CR|KRA|KR|AVENIDA|AVDA|AV|DIAGONAL|DG|TRANSVERSAL|TV|C|K)\.?\s*\d/;
  const part=parts.find(p=>road.test(p.trim()))||parts[0];
@@ -21,11 +21,13 @@ export function parseAddress(text){
  if(crossing.length===2){const a=parseAddress(crossing[0]);let b=parseAddress(crossing[1]),inferred=false;if(a&&!b&&/^\d+[A-Z\s]*$/.test(crossing[1])&&['CL','KR'].includes(a.road.split(' ')[0])){b=parseAddress((a.road.startsWith('CL ')?'KR ':'CL ')+crossing[1]);inferred=true;}if(a&&b&&!a.rest?.length&&!b.rest?.length)return {kind:'intersection',road:a.road,otherRoad:b.road,key:[a.road,b.road].sort().join('|'),inferred};if(/\b(?:CON|ESQUINA)\b/.test(original))return null;}
  const tokens=normalizeAddress(original).split(' ');if(!['CL','KR','AV','DG','TV'].includes(tokens[0])||!/^\d+$/.test(tokens[1]||''))return null;
  let end=2;while(end<tokens.length&&(/^[A-Z]$/.test(tokens[end])||['BIS','OESTE','NORTE','SUR','ESTE'].includes(tokens[end])))end++;
- return {kind:'address',road:tokens.slice(0,end).join(' '),rest:tokens.slice(end),normalized:tokens.join(' ')};
+ const rest=tokens.slice(end),crossType=['CL','KR','AV','DG','TV'].includes(rest[0])?rest.shift():undefined;
+ return {kind:'address',road:tokens.slice(0,end).join(' '),rest,crossType,normalized:tokens.join(' ')};
 }
 export function bucketFor(road){let hash=2166136261;for(const c of road)hash=Math.imul(hash^c.charCodeAt(0),16777619);return (hash>>>0)%256;}
 export function addressMatches(query,row){
- const parsed=parseAddress(row[0]);if(!parsed||parsed.road!==query.road)return false;
+ const parsed=parseAddress(row[0]);if(!parsed||parsed.kind!=='address'||query.kind!=='address'||parsed.road!==query.road)return false;
+ if(query.crossType&&parsed.crossType&&query.crossType!==parsed.crossType)return false;
  // A fully entered plate must agree with all components. Missing sector is only
  // a candidate variant; an explicitly supplied letter/sector cannot disappear.
  const supplied=query.rest;if(!supplied.length)return true;

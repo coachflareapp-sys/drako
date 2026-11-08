@@ -1,5 +1,7 @@
 # Buscador oficial de Cali: implementación
 
+La ampliación posterior del 7 de noviembre incorpora establecimientos y predios rurales y corrige coincidencias ajenas. Ver [REFERENCIAS_CALI.md](REFERENCIAS_CALI.md) para fuentes, pruebas y límites vigentes.
+
 ## Actualización del 7 de noviembre de 2026
 
 Se regeneró la búsqueda local con las páginas WFS ya descargadas; su corte declarado sigue siendo 2026-09-03. No es una nueva actualización de campo de la Alcaldía.

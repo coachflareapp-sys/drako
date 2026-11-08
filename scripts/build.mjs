@@ -16,7 +16,9 @@ try{for(const bucket of await readdir(resolve(target,'catalogue/cali/streets')))
 // Copy only the current catalogue naming scheme, excluding obsolete generated files.
 for(const bucket of await readdir('catalogue/cali/streets')){await mkdir(resolve(target,'catalogue/cali/streets',bucket),{recursive:true});for(const file of await readdir('catalogue/cali/streets/'+bucket)){if(!file.includes('%'))await copyFile('catalogue/cali/streets/'+bucket+'/'+file,resolve(target,'catalogue/cali/streets',bucket,file));}}
 for(let i=0;i<256;i++)await unlink(resolve(target,'catalogue/cali',i+'.json')).catch(error=>{if(error.code!=='ENOENT')throw error;});
-for(const file of ['manifest.json','intersections.json'])await copyFile('catalogue/cali/'+file,resolve(target,'catalogue/cali',file));
+for(const file of ['manifest.json','intersections.json','references.json','references-manifest.json'])await copyFile('catalogue/cali/'+file,resolve(target,'catalogue/cali',file));
+const currentParcels=new Set();for(const bucket of await readdir('catalogue/cali/parcels')){await mkdir(resolve(target,'catalogue/cali/parcels',bucket),{recursive:true});for(const file of await readdir('catalogue/cali/parcels/'+bucket)){if(!/^[A-Z0-9_]+\.json$/.test(file))continue;currentParcels.add(bucket+'/'+file);await copyFile('catalogue/cali/parcels/'+bucket+'/'+file,resolve(target,'catalogue/cali/parcels',bucket,file));}}
+for(const bucket of await readdir(resolve(target,'catalogue/cali/parcels')))for(const file of await readdir(resolve(target,'catalogue/cali/parcels',bucket))){if(/^[A-Z0-9_]+\.json$/.test(file)&&!currentParcels.has(bucket+'/'+file))await unlink(resolve(target,'catalogue/cali/parcels',bucket,file));}
 await mkdir(resolve(target,'vendor/leaflet'),{recursive:true});
 for(const file of ['leaflet.js','leaflet.css'])await copyFile('node_modules/leaflet/dist/'+file,resolve(target,'vendor/leaflet',file));
 await copyFile('node_modules/leaflet/LICENSE',resolve(target,'vendor/leaflet/LICENSE'));

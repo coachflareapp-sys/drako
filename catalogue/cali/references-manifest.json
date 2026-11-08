@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-11-08T00:00:42.079Z",
+  "source": "https://ws-idesc.cali.gov.co/geoserver/ows",
+  "counts": {
+    "educacion:esf_establecimiento_educativo": 356,
+    "cultura:pbic_inc_bibliotecas": 63,
+    "pot_2014:eqp_equipamiento_rural_colectivo": 123,
+    "pot_2014:eqp_uba_seguridad_ciudadana": 89,
+    "pot_2014:eqp_uco_salud": 482,
+    "pot_2014:eqp_uco_educacion": 1337,
+    "bienestar_social:oapi_oeppi_privados": 812,
+    "salud:ads_ips_capacidad_reps": 480,
+    "dapm:pdt_est_estrato_rural": 1377,
+    "catastro:cat_bas_terrenos": 10348
+  },
+  "total": 15467,
+  "parcel_files": 337,
+  "excluded_rural_formats": 20683,
+  "facility_sha256": "17f8eadf8ac953dd8d59d48b2ecdb6f36b59545c1ff02e29b574fc250626335e",
+  "privacy": "Only public place names, addresses, zones and reference coordinates. No contacts, parcel identifiers, strata, owners or student data.",
+  "location_quality": "Municipal reference points or interior parcel points, not verified entrances.",
+  "attribution": "Alcaldía de Santiago de Cali — IDESC and the municipal departments named in each layer. DRAKO adapted field selection, search indexes and polygon interior reference points.",
+  "source_terms": "Original source licences apply to the derived data; the application code is separate. The rural-equipment catalogue declares Creative Commons Attribution Share-Alike.",
+  "rural_equipment_catalogue": "https://datos.cali.gov.co/dataset/pot-equipamientos-rurales",
+  "rural_equipment_licence": "https://www.opendefinition.org/licenses/cc-by-sa",
+  "fire_address_source": "https://bomberoscali.org/academia-nacional-de-bomberos-de-colombia/",
+  "health_address_source": "https://www.saludladera.gov.co/docs/Transparencia%20y%20Acceso%20Informacion%20Publica/6.%20Participa/6.2.1%20diagnostico_e_identificacion_de_problemas/caja%20de%20herramientas/Manual%20del%20Proceso%20de%20Atenci%C3%B3n%20al%20Usuario.pdf"
+}
