@@ -16,6 +16,11 @@ const horizontal=feature('CL 1',[[-76.551,3.45],[-76.549,3.45]]),overpass=featur
 assert.deepEqual(endpointCrossings([a,b],{'CL 1|KR 2':[['exact']]}),{});
 const joined=feature('KR 2',[[-76.549,3.45],[-76.549,3.451]]);assert.equal(endpointCrossings([a,joined])['CL 1|KR 2'].length,1);
 const env={SUPABASE_SERVICE_KEY:'crossing-test',ASSETS:{async fetch(url){try{return new Response(await readFile('dist'+decodeURIComponent(new URL(url).pathname)))}catch{return new Response('',{status:404})}}}};
+const through=feature('KR 2',[[-76.55,3.449],[-76.55,3.45],[-76.55,3.451]]),branch=feature('CL 1',[[-76.55,3.45],[-76.549,3.45]]);
+assert.equal(endpointCrossings([through,branch])['CL 1|KR 2'].length,1);
+const offset=feature('CL 1',[[-76.54999,3.45],[-76.549,3.45]]);assert.deepEqual(endpointCrossings([through,offset]),{});
+const customer=await (await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Cra. 36 #48a-2')),env)).json();
+assert.equal(customer.requires_map,true);assert.equal(customer.places[0].quality,'corner_hint');assert.ok(customer.places[0].label.includes('CL 48 A con KR 36'));assert.ok(Math.abs(customer.places[0].lat-3.41192656)<.000001);
 const r=await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Avenida 12 Oeste con Calle 11 Oeste, Aguacatal, Cali')),env);assert.equal(r.status,200);const d=await r.json();assert.equal(d.places.length,1);assert.equal(d.auto_select,false);assert.equal(d.places[0].quality,'intersection_reference');assert.ok(Math.abs(d.places[0].lat-3.45960363)<.00001);
 const wrong=await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Avenida 12 Oeste con Calle 11 Oeste, Montebello, Cali')),env);assert.equal((await wrong.json()).places.length,0);
 const hint=await (await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Avenida 12 Oeste #11 Oeste-99999, Aguacatal, Cali')),env)).json();
