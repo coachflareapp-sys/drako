@@ -18,22 +18,28 @@ export function normalizeAddress(text){
  .replace(/(\d)([A-Z])/g,'$1 $2').replace(/[^A-Z0-9]+/g,' ').trim().replace(/\s+/g,' ').replace(/\b0+(?=\d)/g,'');
 }
 export function parseAddress(text){
- const original=addressText(text).replace(/[,\s]+ESQUINA\s*$/,'');const crossing=original.split(/\s+(?:CON|ESQUINA(?:\s+CON)?|Y)\s+/);
- if(crossing.length===2){const a=parseAddress(crossing[0]);let b=parseAddress(crossing[1]),inferred=false;if(a&&!b&&/^\d+[A-Z\s]*$/.test(crossing[1])&&['CL','KR'].includes(a.road.split(' ')[0])){b=parseAddress((a.road.startsWith('CL ')?'KR ':'CL ')+crossing[1]);inferred=true;}if(a&&b&&!a.rest?.length&&!b.rest?.length)return {kind:'intersection',road:a.road,otherRoad:b.road,key:[a.road,b.road].sort().join('|'),inferred};if(/\b(?:CON|ESQUINA)\b/.test(original))return null;}
+ const original=addressText(text).replace(/[,\s]+ESQUINA\s*$/,'');const crossing=original.split(/\b(?:CON|ESQUINA)\b/.test(original)?/\s+(?:CON|ESQUINA(?:\s+CON)?)\s+/:/\s+Y\s+(?=(?:(?:CL|CALLE|KR|CRA|CARRERA|AV|AVENIDA|DG|DIAGONAL|TV|TRANSVERSAL)\s*)?\d)/);
+ if(crossing.length===2){const left=roadName(crossing[0]),right=roadName(crossing[1]);if(left&&right&&!/[#-]/.test(original))return {kind:'intersection',road:left,otherRoad:right,key:[left,right].sort().join('|'),inferred:false};const a=parseAddress(crossing[0]);let b=parseAddress(crossing[1]),inferred=false;if(a&&!b&&/^\d+[A-Z\s]*$/.test(crossing[1])&&['CL','KR'].includes(a.road.split(' ')[0])){b=parseAddress((a.road.startsWith('CL ')?'KR ':'CL ')+crossing[1]);inferred=true;}if(a&&b&&!a.rest?.length&&!b.rest?.length)return {kind:'intersection',road:a.road,otherRoad:b.road,key:[a.road,b.road].sort().join('|'),inferred};if(/\b(?:CON|ESQUINA)\b/.test(original))return null;}
  const tokens=normalizeAddress(original).split(' ');if(!['CL','KR','AV','DG','TV'].includes(tokens[0])||!/^\d+$/.test(tokens[1]||''))return null;
  let end=2;while(end<tokens.length&&(/^[A-Z]$/.test(tokens[end])||['BIS','OESTE','NORTE','SUR','ESTE'].includes(tokens[end])))end++;
+ if(original.includes('#')){const road=roadName(original.split('#')[0]);if(!road)return null;end=road.split(' ').length;}
  const rest=tokens.slice(end),crossType=['CL','KR','AV','DG','TV'].includes(rest[0])?rest.shift():undefined;
  const complement=rest.findIndex((token,i)=>i>=2&&i<rest.length-1&&unitTokens.has(token)&&rest.slice(0,i).filter(t=>/^\d+$/.test(t)).length>=2);
  const base=complement>=0?rest.slice(0,complement):rest;
  return {kind:'address',road:tokens.slice(0,end).join(' '),rest:base,crossType,hasComplements:complement>=0,normalized:tokens.join(' ')};
 }
 export function bucketFor(road){let hash=2166136261;for(const c of road)hash=Math.imul(hash^c.charCodeAt(0),16777619);return (hash>>>0)%256;}
+export function roadName(text){
+ const tokens=normalizeAddress(text).split(' ');
+ return ['CL','KR','AV','DG','TV'].includes(tokens[0])&&/^\d+$/.test(tokens[1]||'')&&tokens.slice(2).every(t=>/^\d+$/.test(t)||/^[A-Z]$/.test(t)||['BIS','OESTE','NORTE','SUR','ESTE'].includes(t))?tokens.join(' '):null;
+}
 // A house plate supplies a cross-road reference, never the house coordinates.
 export function addressCorner(text){
  const p=parseAddress(text);if(p?.kind!=='address'||p.rest.length<2)return null;
- const end=p.rest.findIndex((t,i)=>i>0&&/^\d+$/.test(t));if(end<1)return null;
+ const raw=addressText(text),plate=raw.includes('#')?raw.split('#')[1].split(/[-–]/):[];
+ const end=p.rest.findIndex((t,i)=>i>0&&/^\d+$/.test(t));if(end<1&&plate.length<2)return null;
  const type=p.crossType||({KR:'CL',CL:'KR',AV:'CL'})[p.road.split(' ')[0]];
- if(!type)return null;const other=type+' '+p.rest.slice(0,end).join(' ');
+ if(!type)return null;const other=plate.length>=2?roadName((p.crossType?'':type+' ')+plate[0]):type+' '+p.rest.slice(0,end).join(' ');if(!other)return null;
  return {road:p.road,otherRoad:other,key:[p.road,other].sort().join('|')};
 }
 export function addressMatches(query,row){

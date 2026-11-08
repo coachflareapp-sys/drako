@@ -6,10 +6,14 @@ const catalogueCache=new Map();
 async function catalogue(env,url,file){if(catalogueCache.has(file))return catalogueCache.get(file);const response=await env.ASSETS.fetch(new URL('/catalogue/cali/'+file,url));if(!response.ok)return null;const data=await response.json();if(catalogueCache.size>12)catalogueCache.clear();catalogueCache.set(file,data);return data;}
 const signedValue=p=>({label:p.label,lon:p.lon,lat:p.lat,expires:p.expires,original:p.original,source:p.source,quality:p.quality});
 async function signedPlace(p,query,env){const value=signedValue({...p,original:query,expires:Date.now()+20*60000});return {...value,signature:await sign(value,env.SUPABASE_SERVICE_KEY)};}
+async function crossingPlaces(key,query,env,url){
+ const exact=await catalogue(env,url,'intersections.json'),references=await catalogue(env,url,'intersection-references.json');
+ return [...(exact?.[key]||[]).map(row=>({row,quality:'intersection'})),...(references?.[key]||[]).map(row=>({row,quality:'intersection_reference'}))].filter(({row})=>zoneMatches(query,row[1])).slice(0,5).map(({row:[label,barrio,lon,lat],quality})=>({label:label+' · '+barrio+', Cali',lon,lat,source:'Alcaldía de Cali · ejes viales',quality}));
+}
 async function officialPlaces(query,env,url){
  if(/\b(?:PALMIRA|YUMBO|JAMUNDI|CANDELARIA)\b/i.test(query.normalize('NFD').replace(/[\u0300-\u036f]/g,'')))return [];
  const parsed=parseAddress(query);if(!parsed)return [];
- if(parsed.kind==='intersection'){const data=await catalogue(env,url,'intersections.json'),exact=(data?.[parsed.key]||[]).filter(row=>zoneMatches(query,row[1]));if(exact.length)return exact.slice(0,5).map(([label,barrio,lon,lat])=>({label:label+' · '+barrio+', Cali',lon,lat,source:'Alcaldía de Cali · ejes viales',quality:'intersection'}));const near=await catalogue(env,url,'intersection-references.json');return (near?.[parsed.key]||[]).filter(row=>zoneMatches(query,row[1])).slice(0,5).map(([label,barrio,lon,lat])=>({label:label+' · '+barrio+', Cali',lon,lat,source:'Alcaldía de Cali · referencia de ejes viales',quality:'intersection_reference'}));}
+ if(parsed.kind==='intersection')return crossingPlaces(parsed.key,query,env,url);
  const rows=await catalogue(env,url,'streets/'+bucketFor(parsed.road)+'/'+parsed.road.replaceAll(' ','_')+'.json');if(!rows)return [];
  let matches=rows.filter(row=>addressMatches(parsed,row)&&zoneMatches(query,row[2]));
  const words=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
@@ -44,9 +48,8 @@ export default {async fetch(request,env){const url=new URL(request.url);if(!url.
  if(local.length){const area=isAreaQuery(query);return json({places:await Promise.all(local.map(p=>signedPlace(p,query,env))),auto_select:false,area_suggestions:area,message:area?'Estos son lugares conocidos del sector. Elige uno solo si será tu recogida o destino; para otra ubicación escribe una dirección o establecimiento concreto.':'Encontramos referencias de fuentes oficiales. Selecciona el establecimiento o predio correcto; el punto puede no coincidir con su entrada exacta.'});}
  const corner=addressCorner(query);
  if(corner&&!/\b(?:PALMIRA|YUMBO|JAMUNDI|CANDELARIA)\b/i.test(query.normalize('NFD').replace(/[\u0300-\u036f]/g,''))){
- const exact=await catalogue(env,url,'intersections.json'),near=await catalogue(env,url,'intersection-references.json');
- const rows=(exact?.[corner.key]||near?.[corner.key]||[]).filter(row=>zoneMatches(query,row[1])).slice(0,5);
- if(rows.length)return json({places:rows.map(([label,barrio,lon,lat])=>({label:label+' · '+barrio+', Cali',lon,lat,quality:'corner_hint'})),auto_select:false,requires_map:true,message:'No encontramos la puerta exacta. Abre el mapa en esta esquina y marca tu punto de recogida o llegada.'});
+ const places=await crossingPlaces(corner.key,query,env,url);
+ if(places.length)return json({places:places.map(({label,lon,lat})=>({label,lon,lat,quality:'corner_hint'})),auto_select:false,requires_map:true,message:'No encontramos la puerta exacta. Abre el mapa en esta esquina y marca tu punto de recogida o llegada.'});
  }
  if(!env.ORS_API_KEY)return json({places:[],message:'El buscador complementario no está conectado.'});
  const provider=new URL('https://api.heigit.org/pelias/v1/search');provider.search=new URLSearchParams({api_key:env.ORS_API_KEY.trim(),text:query,'boundary.country':'COL','boundary.rect.min_lon':'-76.9','boundary.rect.max_lon':'-75.9','boundary.rect.min_lat':'3.0','boundary.rect.max_lat':'4.1','focus.point.lon':'-76.53','focus.point.lat':'3.45',size:'5'});

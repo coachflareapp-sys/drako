@@ -1,0 +1,5 @@
+import {mkdir,writeFile}from'node:fs/promises';
+const root='.private/cali-roads-refresh';await mkdir(root,{recursive:true});let expected,total=0;
+for(let start=0;expected===undefined||start<expected;start+=5000){const u=new URL('https://ws-idesc.cali.gov.co/geoserver/dapm/ows');u.search=new URLSearchParams({service:'WFS',version:'2.0.0',request:'GetFeature',typeNames:'dapm:pdt_nmc_nomenclatura_vial',count:'5000',startIndex:String(start),sortBy:'gid',outputFormat:'application/json',srsName:'EPSG:4326',propertyName:'gid,nvnmcvial,nvbarrio,the_geom'});
+ const r=await fetch(u,{signal:AbortSignal.timeout(60000)});if(!r.ok)throw Error('WFS '+r.status);const d=await r.json();const count=Number(d.numberMatched??d.totalFeatures);if(!Number.isFinite(count)||expected!==undefined&&count!==expected||!Array.isArray(d.features)||!d.features.length)throw Error('Incomplete or changed municipal source');expected=count;total+=d.features.length;await writeFile(root+'/pdt_nmc_nomenclatura_vial-'+start+'.json',JSON.stringify(d));console.log(total+'/'+expected);
+}if(total!==expected)throw Error('Incomplete refresh');console.log('Fresh full road cache: '+root);

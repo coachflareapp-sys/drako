@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-11-08T03:45:19.494Z",
+  "source": "https://ws-idesc.cali.gov.co/geoserver/dapm/ows",
+  "scope": "Entire published municipal road layer; no neighborhood or bounding-box filter.",
+  "source_features": 11304,
+  "supported_features": 11204,
+  "unsupported_features": 100,
+  "distinct_named_roads": 2187,
+  "vertices": 87078,
+  "bounds": [
+    -76.591512,
+    3.27652846,
+    -76.46130565,
+    3.50314052
+  ],
+  "junction_pairs": 18496,
+  "junction_locations": 20107,
+  "represented_neighborhoods": 336,
+  "limitation": "Processing every published feature is not proof that every physical road or junction in Cali is present, current, or accessible by car.",
+  "roads_without_junction_count": 61
+}

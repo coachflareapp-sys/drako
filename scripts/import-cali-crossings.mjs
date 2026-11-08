@@ -1,7 +1,8 @@
 import {readdir,readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {endpointCrossings} from '../endpoint-crossings.js';
-const features=[];for(const file of (await readdir('.private/cali')).sort())if(file.startsWith('pdt_nmc_nomenclatura_vial-'))features.push(...JSON.parse(await readFile('.private/cali/'+file,'utf8')).features);
+const root=process.env.CALI_ROADS_CACHE||'.private/cali';
+const features=[];for(const file of (await readdir(root)).sort())if(file.startsWith('pdt_nmc_nomenclatura_vial-'))features.push(...JSON.parse(await readFile(root+'/'+file,'utf8')).features);
 if(features.length!==11304)throw Error('Expected complete cached municipal road source; refresh and review counts explicitly if source changed.');
 const exact=JSON.parse(await readFile('catalogue/cali/intersections.json','utf8')),data=endpointCrossings(features,exact),body=JSON.stringify(data);
 await writeFile('catalogue/cali/intersection-references.json',body);
