@@ -1,4 +1,4 @@
-import {parseAddress,bucketFor,addressMatches,normalizeAddress,addressLabel} from './address-search.js';
+import {parseAddress,bucketFor,addressMatches,normalizeAddress,addressLabel,addressCorner} from './address-search.js';
 import {providerMatches,searchReferences,zoneMatches,isAreaQuery} from './reference-search.js';
 import {dispatchNotifications,dispatchForBooking,isAdministrator,whatsappStatus,checkReservationService,telegramStatus,telegramUserStatus,setupTelegram,handleTelegramWebhook} from './notification-worker.js';
 const BASE='https://xbhjqejqbqovwamztdcn.supabase.co';
@@ -42,6 +42,12 @@ export default {async fetch(request,env){const url=new URL(request.url);if(!url.
  let local=searchReferences(query,references||[]);
  if(!local.length&&parsed?.kind==='address'&&parsed.rest.length>=2){const parcels=await catalogue(env,url,'parcels/'+bucketFor(parsed.road)+'/'+parsed.road.replaceAll(' ','_')+'.json');local=searchReferences(query,parcels||[]);}
  if(local.length){const area=isAreaQuery(query);return json({places:await Promise.all(local.map(p=>signedPlace(p,query,env))),auto_select:false,area_suggestions:area,message:area?'Estos son lugares conocidos del sector. Elige uno solo si será tu recogida o destino; para otra ubicación escribe una dirección o establecimiento concreto.':'Encontramos referencias de fuentes oficiales. Selecciona el establecimiento o predio correcto; el punto puede no coincidir con su entrada exacta.'});}
+ const corner=addressCorner(query);
+ if(corner&&!/\b(?:PALMIRA|YUMBO|JAMUNDI|CANDELARIA)\b/i.test(query.normalize('NFD').replace(/[\u0300-\u036f]/g,''))){
+ const exact=await catalogue(env,url,'intersections.json'),near=await catalogue(env,url,'intersection-references.json');
+ const rows=(exact?.[corner.key]||near?.[corner.key]||[]).filter(row=>zoneMatches(query,row[1])).slice(0,5);
+ if(rows.length)return json({places:rows.map(([label,barrio,lon,lat])=>({label:label+' · '+barrio+', Cali',lon,lat,quality:'corner_hint'})),auto_select:false,requires_map:true,message:'No encontramos la puerta exacta. Abre el mapa en esta esquina y marca tu punto de recogida o llegada.'});
+ }
  if(!env.ORS_API_KEY)return json({places:[],message:'El buscador complementario no está conectado.'});
  const provider=new URL('https://api.heigit.org/pelias/v1/search');provider.search=new URLSearchParams({api_key:env.ORS_API_KEY.trim(),text:query,'boundary.country':'COL','boundary.rect.min_lon':'-76.9','boundary.rect.max_lon':'-75.9','boundary.rect.min_lat':'3.0','boundary.rect.max_lat':'4.1','focus.point.lon':'-76.53','focus.point.lat':'3.45',size:'5'});
  const response=await fetch(provider,{headers:{Authorization:env.ORS_API_KEY.trim()},signal:AbortSignal.timeout(12000)});if(!response.ok)return json({message:'El servicio de direcciones no respondió. Intenta nuevamente.',provider_status:response.status},502);const data=await response.json();const places=[];

@@ -28,6 +28,14 @@ export function parseAddress(text){
  return {kind:'address',road:tokens.slice(0,end).join(' '),rest:base,crossType,hasComplements:complement>=0,normalized:tokens.join(' ')};
 }
 export function bucketFor(road){let hash=2166136261;for(const c of road)hash=Math.imul(hash^c.charCodeAt(0),16777619);return (hash>>>0)%256;}
+// A house plate supplies a cross-road reference, never the house coordinates.
+export function addressCorner(text){
+ const p=parseAddress(text);if(p?.kind!=='address'||p.rest.length<2)return null;
+ const end=p.rest.findIndex((t,i)=>i>0&&/^\d+$/.test(t));if(end<1)return null;
+ const type=p.crossType||({KR:'CL',CL:'KR',AV:'CL'})[p.road.split(' ')[0]];
+ if(!type)return null;const other=type+' '+p.rest.slice(0,end).join(' ');
+ return {road:p.road,otherRoad:other,key:[p.road,other].sort().join('|')};
+}
 export function addressMatches(query,row){
  const parsed=parseAddress(row[0]);if(!parsed||parsed.kind!=='address'||query.kind!=='address'||parsed.road!==query.road)return false;
  if(query.crossType&&parsed.crossType&&query.crossType!==parsed.crossType)return false;
