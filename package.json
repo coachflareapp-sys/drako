@@ -5,7 +5,7 @@
     "scripts": {
         "check": "node --check app.js && node --check api.js && node --check portals.js && node --check booking.js && node --check booking-details.js && node --check reservation.js && node --check schedule-editor.js && node --check phone.js && node --check route-quote.js && node --check meter.js && node --check worker.js && node --check management.js && node --check notification-worker.js && node --check address-search.js && node --check telegram-panel.js && node --check reference-search.js && node --check geo-reference.js && node --check scripts/import-cali-references.mjs && node --check endpoint-crossings.js && node --check scripts/import-cali-crossings.mjs",
         "build": "node scripts/build.mjs",
-        "test": "node scripts/test-addresses.mjs && node scripts/audit-addresses.mjs && node scripts/test-notifications.mjs && node scripts/test-qr.mjs && node scripts/test-references.mjs && node scripts/test-endpoint-crossings.mjs && node scripts/test-cali-network.mjs"
+        "test": "node scripts/test-addresses.mjs && node scripts/audit-addresses.mjs && node scripts/test-notifications.mjs && node scripts/test-qr.mjs && node scripts/test-references.mjs && node scripts/test-endpoint-crossings.mjs && node scripts/test-junction-references.mjs && node scripts/test-nearby-addresses.mjs && node scripts/test-cali-network.mjs"
     },
     "devDependencies": {
         "flag-icons": "^7.5.0",

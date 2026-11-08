@@ -1,5 +1,7 @@
 Auditoría de la red municipal completa de Cali — 7 de noviembre de 2026
 
+Actualización posterior: [ampliación de referencias y reducción de huecos](AMPLIACION_COBERTURA_20261107.md). Las cifras siguientes describen la auditoría anterior a esa ampliación.
+
 Se descargó nuevamente la capa completa `dapm:pdt_nmc_nomenclatura_vial` desde https://ws-idesc.cali.gov.co/geoserver/dapm/ows. El servicio WFS declaró 11.304 registros y se descargaron los 11.304, ordenados por gid, sin limitar barrios ni usar un rectángulo geográfico. La igualdad de cantidades comprueba integridad de la descarga, no integridad física de las calles de la ciudad.
 
 Resultado integrado con los cruces existentes:

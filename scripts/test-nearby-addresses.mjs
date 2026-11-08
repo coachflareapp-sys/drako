@@ -1,0 +1,11 @@
+import assert from'node:assert/strict';import{nearbyAddressDistance}from'../nearby-address.js';import worker from'../worker.js';import{readFile}from'node:fs/promises';
+assert.equal(nearbyAddressDistance('Calle 11 Oeste Av 42-07','CL 11 OESTE #42-12'),5);
+for(const a of['CL 11 OESTE #42A-7','CL 11 #42-7','CL 11 OESTE #420-7','CL 11 OESTE #42-120'])assert.equal(nearbyAddressDistance(a,'CL 11 OESTE #42-12'),null,a);
+assert.equal(nearbyAddressDistance('CL 11 OESTE #42-7 APTO 8A','CL 11 OESTE #42-12'),5);
+assert.equal(nearbyAddressDistance('CL 11 OESTE #AV 42-7','CL 11 OESTE #KR 42-12'),null);
+assert.equal(nearbyAddressDistance('DG 15 OESTE #110-14','DG 15 OESTE #11 OESTE-18'),null);
+const env={SUPABASE_SERVICE_KEY:'nearby-test',ORS_API_KEY:'unused',ASSETS:{async fetch(url){try{return new Response(await readFile('dist'+decodeURIComponent(new URL(url).pathname)))}catch{return new Response('',{status:404})}}}};
+const data=await(await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Calle 11 Oeste Av 42-07, Montebello, Cali')),env)).json();
+assert.equal(data.requires_map,true);assert.equal(data.auto_select,false);assert.ok(data.places.length);assert.ok(data.places.every(p=>!p.signature&&p.label.includes('Montebello')));
+const response=await worker.fetch(new Request('https://test/api/quote',{method:'POST',body:JSON.stringify({places:[data.places[0],data.places[0]]})}),env);assert.equal(response.status,400);
+console.log('PASS: nearby recorded house/public-place reference requires map confirmation; letters, sectors, cross numbers and explicit cross types preserved.');

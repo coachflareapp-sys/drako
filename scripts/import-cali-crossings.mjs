@@ -1,10 +1,12 @@
 import {readdir,readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {endpointCrossings} from '../endpoint-crossings.js';
+import {junctionReferences} from '../junction-references.js';
 const root=process.env.CALI_ROADS_CACHE||'.private/cali';
 const features=[];for(const file of (await readdir(root)).sort())if(file.startsWith('pdt_nmc_nomenclatura_vial-'))features.push(...JSON.parse(await readFile(root+'/'+file,'utf8')).features);
 if(features.length!==11304)throw Error('Expected complete cached municipal road source; refresh and review counts explicitly if source changed.');
-const exact=JSON.parse(await readFile('catalogue/cali/intersections.json','utf8')),data=endpointCrossings(features,exact),body=JSON.stringify(data);
+const exact=JSON.parse(await readFile('catalogue/cali/intersections.json','utf8')),data=endpointCrossings(features,exact),known={...exact};for(const[key,rows]of Object.entries(data))known[key]=[...(known[key]||[]),...rows];
+const projected=junctionReferences(features,known);for(const[key,rows]of Object.entries(projected))data[key]=[...(data[key]||[]),...rows];const body=JSON.stringify(data);
 await writeFile('catalogue/cali/intersection-references.json',body);
-await writeFile('catalogue/cali/intersection-references-manifest.json',JSON.stringify({generated_at:new Date().toISOString(),source:'https://ws-idesc.cali.gov.co/geoserver/dapm/ows',layer:'dapm:pdt_nmc_nomenclatura_vial',source_records:features.length,tolerance_m:3,shared_vertex_tolerance_m:.02,pairs:Object.keys(data).length,sha256:createHash('sha256').update(body).digest('hex'),method:'Named road endpoints within 3m or shared digitised vertices within 2cm; existing pairs excluded. No geometric segment-interior crossings or invented house points.',quality:'Approximate road-junction references; not certification of vehicle access or grade.'},null,2));
+await writeFile('catalogue/cali/intersection-references-manifest.json',JSON.stringify({generated_at:new Date().toISOString(),source:'https://ws-idesc.cali.gov.co/geoserver/dapm/ows',layer:'dapm:pdt_nmc_nomenclatura_vial',source_records:features.length,tolerance_m:3,shared_vertex_tolerance_m:.02,endpoint_segment_locations:Object.values(projected).reduce((n,r)=>n+r.length,0),pairs:Object.keys(data).length,sha256:createHash('sha256').update(body).digest('hex'),method:'Shared vertices within 2cm, endpoints within 3m, or endpoints touching/approaching another road segment within 3m. Near-parallel separated segments excluded. No arbitrary interior-interior intersections or invented house points.',quality:'Endpoint-segment references require map selection; not certification of vehicle access or grade.'},null,2));
 console.log(JSON.stringify({pairs:Object.keys(data).length,aguacatal:data['AV 12 OESTE|CL 11 OESTE']}));
