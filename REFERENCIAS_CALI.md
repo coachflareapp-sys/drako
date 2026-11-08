@@ -1,5 +1,7 @@
 # Ampliación de referencias y direcciones de Cali
 
+La segunda ampliación del mismo día está en [MEJORA_DIRECCIONES_20261107.md](MEJORA_DIRECCIONES_20261107.md): 13 consultas con referencia compatible, una con sugerencias de sector y seis sin resultados, sobre la misma muestra de 20.
+
 Revisión del 7 de noviembre de 2026. Se conserva la búsqueda de nomenclatura existente y ORS para rutas. No se contrataron proveedores ni se añadió Google.
 
 ## Qué cambió

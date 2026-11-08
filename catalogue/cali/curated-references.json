@@ -1,0 +1,19 @@
+{
+  "records": [
+    {
+      "name": "Sede San Carlos Borromeo (referencia electoral)",
+      "aliases": ["Escuela San Carlos Borromeo", "Institución Educativa San Carlos Borromeo", "Colegio San Carlos Borromeo"],
+      "address": "",
+      "zone": "Golondrinas · Los Mangos · Altos de Normandía",
+      "point": [-76.54286773775713, 3.457381530655042],
+      "layer": "registraduria:divipole_2026",
+      "verified_reference": true,
+      "provenance": [
+        {"url": "https://www.registraduria.gov.co/IMG/pdf/divipole_definitiva_2026.pdf", "detail": "Valle/Cali, zona 99, puesto 38, Golondrinas Los Mangos, IE San Carlos Borromeo; coordenadas del puesto."},
+        {"url": "https://web1.cali.gov.co/educacion/descargar.php?id=38318", "detail": "Directorio escolar municipal: San Carlos Borromeo, Altos de Normandía. La dirección histórica Avda 7 Oeste 1-61 no se usa como nomenclatura vigente."},
+        {"url": "https://ws-idesc.cali.gov.co/geoserver/ows", "detail": "La coordenada electoral cae dentro de geometrías catastrales cuya dirección describe CGTO GOLONDRINAS VDA GOLONDRINAS SECTOR LOS MANGOS. Esto corrobora el sector, no una puerta ni el funcionamiento actual de un colegio."}
+      ],
+      "limitations": "Referencia oficial de puesto electoral, seleccionada explícitamente. No certifica acceso vehicular, puerta ni actividad escolar vigente. No confundir con la parroquia homónima."
+    }
+  ]
+}

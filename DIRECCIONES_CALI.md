@@ -1,5 +1,7 @@
 # Buscador oficial de Cali: implementación
 
+Estado más reciente: [segunda ampliación y pruebas](MEJORA_DIRECCIONES_20261107.md).
+
 La ampliación posterior del 7 de noviembre incorpora establecimientos y predios rurales y corrige coincidencias ajenas. Ver [REFERENCIAS_CALI.md](REFERENCIAS_CALI.md) para fuentes, pruebas y límites vigentes.
 
 ## Actualización del 7 de noviembre de 2026

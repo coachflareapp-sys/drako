@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {endpointCrossings} from '../endpoint-crossings.js';
+import {readFile} from 'node:fs/promises';
+import worker from '../worker.js';
+const feature=(name,coordinates)=>({properties:{nvnmcvial:name,nvbarrio:'Aguacatal'},geometry:{type:'LineString',coordinates}});
+const a=feature('CL 1',[[-76.55,3.45],[-76.549,3.45]]),b=feature('KR 2',[[-76.54898,3.45],[-76.54898,3.451]]);
+assert.equal(endpointCrossings([a,b])['CL 1|KR 2'].length,1);
+const far=feature('KR 2',[[-76.54896,3.45],[-76.54896,3.451]]);assert.deepEqual(endpointCrossings([a,far]),{});
+const horizontal=feature('CL 1',[[-76.551,3.45],[-76.549,3.45]]),overpass=feature('KR 2',[[-76.55,3.449],[-76.55,3.451]]);assert.deepEqual(endpointCrossings([horizontal,overpass]),{});
+assert.deepEqual(endpointCrossings([a,b],{'CL 1|KR 2':[['exact']]}),{});
+const joined=feature('KR 2',[[-76.549,3.45],[-76.549,3.451]]);assert.equal(endpointCrossings([a,joined])['CL 1|KR 2'].length,1);
+const env={SUPABASE_SERVICE_KEY:'crossing-test',ASSETS:{async fetch(url){try{return new Response(await readFile('dist'+decodeURIComponent(new URL(url).pathname)))}catch{return new Response('',{status:404})}}}};
+const r=await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Avenida 12 Oeste con Calle 11 Oeste, Aguacatal, Cali')),env);assert.equal(r.status,200);const d=await r.json();assert.equal(d.places.length,1);assert.equal(d.auto_select,false);assert.equal(d.places[0].quality,'intersection_reference');assert.ok(Math.abs(d.places[0].lat-3.45960363)<.00001);
+const wrong=await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Avenida 12 Oeste con Calle 11 Oeste, Montebello, Cali')),env);assert.equal((await wrong.json()).places.length,0);
+console.log('PASS: tiny endpoint gaps, no interior bridge crossings, manual confirmation and zone constraints.');

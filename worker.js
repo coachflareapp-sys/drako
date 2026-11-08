@@ -1,5 +1,5 @@
 import {parseAddress,bucketFor,addressMatches,normalizeAddress,addressLabel} from './address-search.js';
-import {providerMatches,searchReferences,zoneMatches} from './reference-search.js';
+import {providerMatches,searchReferences,zoneMatches,isAreaQuery} from './reference-search.js';
 import {dispatchNotifications,dispatchForBooking,isAdministrator,whatsappStatus,checkReservationService,telegramStatus,telegramUserStatus,setupTelegram,handleTelegramWebhook} from './notification-worker.js';
 const BASE='https://xbhjqejqbqovwamztdcn.supabase.co';
 const catalogueCache=new Map();
@@ -9,14 +9,14 @@ async function signedPlace(p,query,env){const value=signedValue({...p,original:q
 async function officialPlaces(query,env,url){
  if(/\b(?:PALMIRA|YUMBO|JAMUNDI|CANDELARIA)\b/i.test(query.normalize('NFD').replace(/[\u0300-\u036f]/g,'')))return [];
  const parsed=parseAddress(query);if(!parsed)return [];
- if(parsed.kind==='intersection'){const data=await catalogue(env,url,'intersections.json');return (data?.[parsed.key]||[]).slice(0,5).map(([label,barrio,lon,lat])=>({label:label+' · '+barrio+', Cali',lon,lat,source:'Alcaldía de Cali · ejes viales',quality:'intersection'}));}
+ if(parsed.kind==='intersection'){const data=await catalogue(env,url,'intersections.json'),exact=(data?.[parsed.key]||[]).filter(row=>zoneMatches(query,row[1]));if(exact.length)return exact.slice(0,5).map(([label,barrio,lon,lat])=>({label:label+' · '+barrio+', Cali',lon,lat,source:'Alcaldía de Cali · ejes viales',quality:'intersection'}));const near=await catalogue(env,url,'intersection-references.json');return (near?.[parsed.key]||[]).filter(row=>zoneMatches(query,row[1])).slice(0,5).map(([label,barrio,lon,lat])=>({label:label+' · '+barrio+', Cali',lon,lat,source:'Alcaldía de Cali · referencia de ejes viales',quality:'intersection_reference'}));}
  const rows=await catalogue(env,url,'streets/'+bucketFor(parsed.road)+'/'+parsed.road.replaceAll(' ','_')+'.json');if(!rows)return [];
  let matches=rows.filter(row=>addressMatches(parsed,row)&&zoneMatches(query,row[2]));
  const words=value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
  const text=' '+words(query)+' ',neighborhoodMatches=matches.filter(row=>row[2]&&text.includes(' '+words(row[2])+' '));
  if(neighborhoodMatches.length)matches=neighborhoodMatches;
  matches.sort((a,b)=>(a[3]==='Certificada'?0:1)-(b[3]==='Certificada'?0:1)||a[0].localeCompare(b[0]));
- const unique=[];for(const row of matches){if(unique.some(p=>p.key===row[0]&&Math.hypot((p.lon-row[4])*111000,(p.lat-row[5])*111000)<25))continue;unique.push({key:row[0],label:addressLabel(row[1])+' · '+row[2]+', Cali',lon:row[4],lat:row[5],source:'Alcaldía de Cali',quality:row[3]==='Certificada'?'official':'cadastral'});if(unique.length>=5)break;}return unique;
+ const unique=[];for(const row of matches){const parts=parseAddress(row[0]),key=[parts.road,parts.crossType,...parts.rest].filter(Boolean).join(' ');if(unique.some(p=>p.key===key&&Math.hypot((p.lon-row[4])*111000,(p.lat-row[5])*111000)<25))continue;unique.push({key,label:addressLabel(row[1])+' · '+row[2]+', Cali',lon:row[4],lat:row[5],source:'Alcaldía de Cali',quality:row[3]==='Certificada'?'official':'cadastral'});if(unique.length>=5)break;}return unique;
 }
 function decodeGeometry(encoded){const points=[];let index=0,lat=0,lon=0;while(index<encoded.length){const values=[];for(let axis=0;axis<2;axis++){let result=0,shift=0,byte;do{byte=encoded.charCodeAt(index++)-63;result|=(byte&31)<<shift;shift+=5;}while(byte>=32&&index<encoded.length);values.push(result&1?~(result>>1):result>>1);}lat+=values[0];lon+=values[1];points.push([lon/1e5,lat/1e5]);}return points;}
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
@@ -36,19 +36,19 @@ export default {async fetch(request,env){const url=new URL(request.url);if(!url.
  return json(await signedPlace({label:label.trim(),lat,lon,source:'Punto seleccionado por el pasajero',quality:'manual'},label.trim(),env));}
  if(url.pathname==='/api/places'&&request.method==='GET'){
  const query=url.searchParams.get('q')?.trim();if(!query||query.length<4||query.length>200)return json({places:[]});
- const official=await officialPlaces(query,env,url);if(official.length){const parsed=parseAddress(query);return json({places:await Promise.all(official.map(p=>signedPlace(p,query,env))),auto_select:official.length===1&&!parsed?.inferred&&(parsed?.kind==='intersection'||parsed?.rest.length>=2),message:parsed?.inferred?'Interpretamos el segundo número como la vía que cruza. Confirma la esquina indicada.':undefined,attribution:'Direcciones: Alcaldía de Cali · CC BY'});}
+ const official=await officialPlaces(query,env,url);if(official.length){const parsed=parseAddress(query),approximate=official.some(p=>p.quality==='intersection_reference');return json({places:await Promise.all(official.map(p=>signedPlace(p,query,env))),auto_select:official.length===1&&!parsed?.inferred&&!approximate&&(parsed?.kind==='intersection'||parsed?.rest.length>=2),message:approximate?'Encontramos una referencia del cruce en los ejes municipales. Selecciónala si corresponde a tu viaje; el acceso vehicular puede variar.':parsed?.inferred?'Interpretamos el segundo número como la vía que cruza. Confirma la esquina indicada.':undefined,attribution:'Direcciones: Alcaldía de Cali · CC BY'});}
  const parsed=parseAddress(query);if(parsed?.kind==='intersection')return json({places:[],message:'No encontramos ese cruce con suficiente precisión. Puedes usar tu ubicación o marcarlo en el mapa.'});
  const references=await catalogue(env,url,'references.json');
  let local=searchReferences(query,references||[]);
  if(!local.length&&parsed?.kind==='address'&&parsed.rest.length>=2){const parcels=await catalogue(env,url,'parcels/'+bucketFor(parsed.road)+'/'+parsed.road.replaceAll(' ','_')+'.json');local=searchReferences(query,parcels||[]);}
- if(local.length)return json({places:await Promise.all(local.map(p=>signedPlace(p,query,env))),auto_select:false,message:'Encontramos referencias municipales. Selecciona el establecimiento o predio correcto; el punto puede no coincidir con su entrada exacta.'});
+ if(local.length){const area=isAreaQuery(query);return json({places:await Promise.all(local.map(p=>signedPlace(p,query,env))),auto_select:false,area_suggestions:area,message:area?'Estos son lugares conocidos del sector. Elige uno solo si será tu recogida o destino; para otra ubicación escribe una dirección o establecimiento concreto.':'Encontramos referencias de fuentes oficiales. Selecciona el establecimiento o predio correcto; el punto puede no coincidir con su entrada exacta.'});}
  if(!env.ORS_API_KEY)return json({places:[],message:'El buscador complementario no está conectado.'});
  const provider=new URL('https://api.heigit.org/pelias/v1/search');provider.search=new URLSearchParams({api_key:env.ORS_API_KEY.trim(),text:query,'boundary.country':'COL','boundary.rect.min_lon':'-76.9','boundary.rect.max_lon':'-75.9','boundary.rect.min_lat':'3.0','boundary.rect.max_lat':'4.1','focus.point.lon':'-76.53','focus.point.lat':'3.45',size:'5'});
  const response=await fetch(provider,{headers:{Authorization:env.ORS_API_KEY.trim()},signal:AbortSignal.timeout(12000)});if(!response.ok)return json({message:'El servicio de direcciones no respondió. Intenta nuevamente.',provider_status:response.status},502);const data=await response.json();const places=[];
  for(const feature of data.features||[]){const [lon,lat]=feature.geometry?.coordinates||[];if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;const properties=feature.properties||{};if(!['address','venue'].includes(properties.layer))continue;
  if(!providerMatches(query,properties))continue;
  if(!parsed&&/^(?:CL|KR|AV|DG|TV)\s+\d/.test(normalizeAddress(query)))continue;
- places.push(await signedPlace({label:properties.label,lon,lat,source:'OpenRouteService · OpenStreetMap',quality:'search'},query,env));}return json({places,message:places.length?undefined:'No encontramos una coincidencia suficientemente relacionada con ese nombre, dirección y zona. Agrega el establecimiento o la dirección completa; también puedes usar tu ubicación.'})}
+ places.push(await signedPlace({label:properties.label,lon,lat,source:'OpenRouteService · OpenStreetMap',quality:'search'},query,env));}return json({places,area_suggestions:places.length>0&&isAreaQuery(query),message:places.length?(isAreaQuery(query)?'Elige un lugar concreto del sector solo si corresponde a tu recogida o destino.':undefined):'No encontramos una coincidencia suficientemente relacionada con ese nombre, dirección y zona. Agrega el establecimiento o la dirección completa; también puedes usar tu ubicación.'})}
  if(url.pathname==='/api/quote'&&request.method==='POST'){
  if(!env.ORS_API_KEY)return json({message:'El servicio de rutas no está conectado.'},503);
  if(Number(request.headers.get('content-length')||0)>12000)return json({message:'Solicitud demasiado grande.'},413);

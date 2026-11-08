@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-11-08T01:52:58.027Z",
+  "source": "https://ws-idesc.cali.gov.co/geoserver/dapm/ows",
+  "layer": "dapm:pdt_nmc_nomenclatura_vial",
+  "source_records": 11304,
+  "tolerance_m": 3,
+  "pairs": 57,
+  "sha256": "80e11d802f7c5311199cb96029173fc2685f79fec35e556c11bfe76f4b98675f",
+  "method": "Distinct named road endpoints within 3m; existing exact pairs excluded. No interior geometric crossings and no invented house points.",
+  "quality": "Approximate road-junction references; not certification of vehicle access or grade."
+}
