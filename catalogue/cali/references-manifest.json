@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-08T01:46:02.187Z",
+  "generated_at": "2026-11-08T03:52:49.036Z",
   "source": "https://ws-idesc.cali.gov.co/geoserver/ows",
   "counts": {
     "educacion:esf_establecimiento_educativo": 356,
@@ -22,7 +22,7 @@
   "excluded_large_parcels": 2409,
   "curated_sources": "/catalogue/cali/curated-references.json",
   "excluded_rural_formats": 37771,
-  "facility_sha256": "371d5406b7fb20058afc910e53e6c9b71dff97daa32dbf43e037a7e893e99899",
+  "facility_sha256": "33ac10e730e7a3df584af5e52d7562cb94a040968435bbd11c82fa8fc7338a7b",
   "privacy": "Only public place names, addresses, zones and reference coordinates. No contacts, parcel identifiers, strata, owners or student data.",
   "location_quality": "Municipal reference points or interior parcel points, not verified entrances.",
   "attribution": "Alcaldía de Santiago de Cali — IDESC and the municipal departments named in each layer; Registraduría Nacional for the curated electoral reference. DRAKO adapted field selection, search indexes and polygon interior reference points.",

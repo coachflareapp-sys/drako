@@ -21,6 +21,8 @@ for(const text of ['avenida 14 oeste #8-18','Av. 14 Oeste 8 18','AV 14 OESTE # 8
 const corners=await places('calle 5 con cra 39 esquina');assert.ok(corners.length>=1);assert.equal(corners[0].quality,'intersection');assert.ok(corners.every(p=>!p.label.includes('39-71')));
 const inferredResponse=await worker.fetch(new Request('https://test/api/places?q='+encodeURIComponent('Calle 5 y 39')),env);const inferred=await inferredResponse.json();assert.ok(inferred.places.length>=1);assert.equal(inferred.auto_select,false);assert.ok(inferred.message.includes('Confirma')||inferred.message.includes('referencia'));
 assert.equal(parseAddress('Cl 72Y #27G-05').road,'CL 72 Y');
+assert.equal(addressMatches(parseAddress('C 53 B 1 N #8 BIS-05'),['CL 53 B 1 N 8 BIS 5','C 53 B 1 N #8 BIS-05']),true);
+assert.equal(addressMatches(parseAddress('CL 53 B #1 N-8'),['CL 53 B 1 N 8 BIS 5','C 53 B 1 N #8 BIS-05']),false);
 assert.equal(parseAddress('K 39 #5-20').road,'KR 39');assert.equal(parseAddress('C 5 #39-20').road,'CL 5');
 assert.equal(addressMatches(parseAddress('CL 5 39 71'),['CL 5 39 71 2']),false);
 assert.equal(addressMatches(parseAddress('AV 14 OESTE 8 18 APTO 201'),['AV 14 OESTE 8 OESTE 18']),true);

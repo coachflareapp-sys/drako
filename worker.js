@@ -20,7 +20,7 @@ async function officialPlaces(query,env,url){
  const text=' '+words(query)+' ',neighborhoodMatches=matches.filter(row=>row[2]&&text.includes(' '+words(row[2])+' '));
  if(neighborhoodMatches.length)matches=neighborhoodMatches;
  matches.sort((a,b)=>(a[3]==='Certificada'?0:1)-(b[3]==='Certificada'?0:1)||a[0].localeCompare(b[0]));
- const unique=[];for(const row of matches){const parts=parseAddress(row[0]),key=[parts.road,parts.crossType,...parts.rest].filter(Boolean).join(' ');if(unique.some(p=>p.key===key&&Math.hypot((p.lon-row[4])*111000,(p.lat-row[5])*111000)<25))continue;unique.push({key,label:addressLabel(row[1])+' · '+row[2]+', Cali',lon:row[4],lat:row[5],source:'Alcaldía de Cali',quality:row[3]==='Certificada'?'official':'cadastral'});if(unique.length>=5)break;}return unique;
+ const unique=[];for(const row of matches){const parts=parseAddress(row[1]),key=[parts.road,parts.crossType,...parts.rest].filter(Boolean).join(' ');if(unique.some(p=>p.key===key&&Math.hypot((p.lon-row[4])*111000,(p.lat-row[5])*111000)<25))continue;unique.push({key,label:addressLabel(row[1])+' · '+row[2]+', Cali',lon:row[4],lat:row[5],source:'Alcaldía de Cali',quality:row[3]==='Certificada'?'official':'cadastral'});if(unique.length>=5)break;}return unique;
 }
 function decodeGeometry(encoded){const points=[];let index=0,lat=0,lon=0;while(index<encoded.length){const values=[];for(let axis=0;axis<2;axis++){let result=0,shift=0,byte;do{byte=encoded.charCodeAt(index++)-63;result|=(byte&31)<<shift;shift+=5;}while(byte>=32&&index<encoded.length);values.push(result&1?~(result>>1):result>>1);}lat+=values[0];lon+=values[1];points.push([lon/1e5,lat/1e5]);}return points;}
 const json=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store'}});

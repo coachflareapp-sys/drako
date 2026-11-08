@@ -21,10 +21,10 @@ export function setupQuote(){
  pending=(async()=>{try{const response=await fetch('/api/places?q='+encodeURIComponent(text));const data=await response.json();if(own!==sequence||!input.isConnected)return;if(!response.ok)throw new Error(data.message);item.areaQuery=data.area_suggestions===true;list.replaceChildren();if(data.auto_select&&data.places.length===1){select(data.places[0]);return;}
  for(const place of data.places){const button=document.createElement('button');button.type='button';button.textContent=(data.requires_map?'Marcar mi punto cerca de: ':'')+place.label;button.onclick=()=>data.requires_map?openNear(place):select(place);list.append(button);}
  const note=document.createElement('p');note.className='field-help';note.textContent=data.message||(data.places.length?'Toca la dirección que corresponde a tu viaje.':'No encontramos el número exacto. Revisa la dirección y selecciona una coincidencia; el mapa es una ayuda opcional.');list.append(note);
- }catch(error){if(own===sequence)status.textContent=error.message;}finally{if(lastQuery===text)pending=null;}})();return pending;
+ }catch(error){if(own===sequence)status.textContent=error.message;}finally{if(own===sequence)pending=null;}})();return pending;
  };
  const openNear=addLocationPicker(input,select,()=>item.place);
- input.oninput=()=>{item.place=null;item.areaQuery=false;sequence++;clear();clearTimeout(timer);list.replaceChildren();status.textContent='Buscando las direcciones para calcular tu recorrido…';timer=setTimeout(item.lookup,600);};
+ input.oninput=()=>{item.place=null;item.areaQuery=false;sequence++;pending=null;lastQuery='';clear();clearTimeout(timer);list.replaceChildren();status.textContent='Buscando las direcciones para calcular tu recorrido…';timer=setTimeout(item.lookup,600);};
  input.addEventListener('blur',()=>item.lookup());
  };
  attach(document.querySelector('#origin'));attach(document.querySelector('#destination'));

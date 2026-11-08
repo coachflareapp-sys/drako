@@ -43,7 +43,7 @@ export function addressCorner(text){
  return {road:p.road,otherRoad:other,key:[p.road,other].sort().join('|')};
 }
 export function addressMatches(query,row){
- const parsed=parseAddress(row[0]);if(!parsed||parsed.kind!=='address'||query.kind!=='address'||parsed.road!==query.road)return false;
+ const parsed=parseAddress(row[1]||row[0]);if(!parsed||parsed.kind!=='address'||query.kind!=='address'||parsed.road!==query.road)return false;
  if(query.crossType&&parsed.crossType&&query.crossType!==parsed.crossType)return false;
  // A fully entered plate must agree with all components. Missing sector is only
  // a candidate variant; an explicitly supplied letter/sector cannot disappear.
